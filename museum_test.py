@@ -5,9 +5,10 @@ import urllib, re, time, webbrowser
 from datetime import datetime
 from yaml import safe_load, safe_dump
 
-museum = 71
-date = '2022-03-07'
-tickets = f"https://kpb-museum.gomus.de/api/v4/tickets?by_bookable=true&by_free_timing=false&by_museum_ids[]={museum}&by_ticket_type=time_slot&locale=en&per_page=1000&valid_at={date}"
+museum = 5
+date = '2022-04-03'
+#tickets = f"https://kpb-museum.gomus.de/api/v4/tickets?by_bookable=true&by_free_timing=false&by_museum_ids[]={museum}&by_ticket_type=time_slot&locale=en&per_page=1000&valid_at={date}"
+tickets = f"https://kpb-museum.gomus.de/api/v4/tickets?by_bookable=true&by_free_timing=true&by_museum_ids[]={museum}&by_ticket_type=time_slot&locale=en&per_page=1000&valid_at={date}"
 museums = "https://kpb-museum.gomus.de/api/v4/museums?locale=en&per_page=1000"
 
 with urllib.request.urlopen(museums) as mp:
@@ -16,6 +17,7 @@ with urllib.request.urlopen(museums) as mp:
 
 with urllib.request.urlopen(tickets) as tp:
   _t = safe_load(tp)
+  print(_t)
   title = _t['tickets'][0]['title']
   quota_id = _t['tickets'][0]['quota_ids'][0]
   tickets_id = _t['tickets'][0]['id']
@@ -23,6 +25,7 @@ with urllib.request.urlopen(tickets) as tp:
   print (mus[museum])
   with urllib.request.urlopen(capacities) as cp:
     _c = safe_load(cp)
+    print (_c)
     slots = _c['data'][f'{quota_id}']['capacities']
     for slot in slots:
       time = datetime.strptime(slot,"%Y-%m-%dT%H:%M:%S%z")

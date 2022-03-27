@@ -3,7 +3,7 @@
 import logging
 
 from telegram import Update, ForceReply
-from telegram.ext import Updater, CommandHandler, CallbackContext
+from telegram.ext import Updater, CommandHandler, CallbackContext, PicklePersistence
 from bs4 import BeautifulSoup
 from datetime import datetime
 from uuid import uuid4
@@ -21,11 +21,18 @@ logger = logging.getLogger(__name__)
 
 def museums_touch(obj):
   tickets = f"https://kpb-museum.gomus.de/api/v4/tickets?by_bookable=true&by_free_timing=false&by_museum_ids[]={obj['id']}&by_ticket_type=time_slot&locale=en&per_page=1000&valid_at={obj['date']}"
-#  logging.info(tickets)
   abort = 0
+  book_date = datetime.strptime(obj['date'],'%Y-%m-%d')
+  today = datetime.today()
+  if book_date < today:
+    return {'abort': 1, 'msg': "Book date is in the past, removing this event"}
+  if (book_date - today).days > 6:
+    return {'abort': 0, 'msg': ""}
   msg = []
   with urllib.request.urlopen(tickets) as tp:
     _t = safe_load(tp)
+    if not len(_t['tickets']):
+      return {'abort': 0, 'msg': ""}
     title = _t['tickets'][0]['title']
     quota_id = _t['tickets'][0]['quota_ids'][0]
     tickets_id = _t['tickets'][0]['id']
@@ -144,7 +151,8 @@ def main() -> None:
     tf = open('.token','r')
     t = tf.read()
     tf.close()
-    updater = Updater(t)
+    p = PicklePersistence(filename='.museumsonntag_bot.data')
+    updater = Updater(t, persistence=p)
     museums_update()
     dispatcher = updater.dispatcher
     dispatcher.add_handler(CommandHandler("start", start))
