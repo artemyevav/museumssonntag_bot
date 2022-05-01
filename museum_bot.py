@@ -24,6 +24,7 @@ def museums_touch(obj):
   abort = 0
   book_date = datetime.strptime(obj['date'],'%Y-%m-%d')
   today = datetime.today()
+  today = today.replace(hour=0, minute=0, second=0, microsecond=0)
   if book_date < today:
     return {'abort': 1, 'msg': "Book date is in the past, removing this event"}
   if (book_date - today).days > 6:
